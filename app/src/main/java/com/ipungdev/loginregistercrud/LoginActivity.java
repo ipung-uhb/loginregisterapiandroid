@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -39,10 +40,16 @@ public class LoginActivity extends AppCompatActivity {
 
     UserService userService;
 
+    SharedPreferences sharedpreferences;
+    public static final String mypreference = "mypref";
+    public static final String tokenkey = "tokenkey";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        sharedpreferences = getSharedPreferences(mypreference, 0);
+
 
         mContext = this;
         userService = UtilsApi.getUserService(); // meng-init yang ada di package apihelper
@@ -80,14 +87,23 @@ public class LoginActivity extends AppCompatActivity {
                             loading.dismiss();
                             try {
                                 JSONObject jsonRESULTS = new JSONObject(response.body().string());
-                                //Log.e("JSON:",jsonRESULTS);
+                                Log.d("JSON", jsonRESULTS.toString());
                                 if (jsonRESULTS.getString("success").equals("true")){
                                     // Jika login berhasil maka data nama yang ada di response API
                                     // akan diparsing ke activity selanjutnya.
                                     Toast.makeText(mContext, "BERHASIL LOGIN", Toast.LENGTH_SHORT).show();
                                     String name = jsonRESULTS.getJSONObject("user").getString("name");
+                                    String token = jsonRESULTS.getString("access_token");
+
+                                    //simpan disharedpreference
+                                    SharedPreferences.Editor editor = sharedpreferences.edit();
+                                    editor.putString(tokenkey, token);
+                                    editor.commit();
+
+
                                     Intent intent = new Intent(mContext, MainActivity.class);
                                     intent.putExtra("result_name", name);
+                                    intent.putExtra("result_token", token);
                                     startActivity(intent);
                                 } else {
                                     // Jika login gagal
